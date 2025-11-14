@@ -15,15 +15,32 @@ module savings_vault::vault {
     use sui::transfer;
     use sui::tx_context;
     use sui::tx_context::TxContext;
-    use sui::object;
-    use sui::object::UID;
+    use sui::object::{Self, ID, UID};
+    use sui::event;
+    
 
     /// Estrutura principal do cofrinho
-    public struct Vault has key {
+    public struct Vault has key, store {
         id: UID,
         owner: address,
         balance: Balance<SUI>,
         unlock_epoch: u64,
+    }
+
+    /// Evento emitido quando alguém deposita no cofre
+    public struct Deposited has copy, drop {
+        vault_id: ID,
+        amount: u64,
+        owner: address,
+        epoch: u64,
+    }
+
+    /// Evento emitido quando o saque é realizado
+    public struct Withdrawn has copy, drop {
+        vault_id: ID,
+        amount: u64,
+        owner: address,
+        epoch: u64,
     }
     
 
@@ -34,11 +51,11 @@ module savings_vault::vault {
     let vault = Vault {
         id: object::new(ctx),
         owner: sender,
-        balance: balance::zero<SUI>(),  // começa com saldo zero
+        balance: balance::zero<SUI>(), 
         unlock_epoch,
         };
 
-        transfer::transfer(vault, sender);
+        transfer::public_transfer(vault, sender);
     }
 
     /// Deposita SUI no cofrinho (somente o dono do smart contract)
@@ -51,6 +68,14 @@ module savings_vault::vault {
 
         let payment_balance = coin::into_balance(payment);
         balance::join(&mut vault.balance, payment_balance);
+
+        // Emite evento
+        event::emit(Deposited {
+        vault_id: object::id(vault),
+        amount,
+        owner: sender,
+        epoch: tx_context::epoch(ctx)
+        });
     }
 
     /// Retira todo o dinheiro do cofrinho se o tempo já passou
@@ -61,12 +86,20 @@ module savings_vault::vault {
         let current_epoch = tx_context::epoch(ctx);
         assert!(current_epoch >= vault.unlock_epoch, 2);
 
-        // Move o balance e substitui por um novo vazio
+    // Move o balance e substitui por um novo vazio
         let amount = balance::value(&vault.balance);  
-        let balance_to_withdraw = balance::split(&mut vault.balance, amount); 
+        let balance_to_withdraw = balance::split<SUI>(&mut vault.balance, amount);
         let coin_out = coin::from_balance(balance_to_withdraw, ctx);
 
-    transfer::public_transfer(coin_out, vault.owner);
+        transfer::public_transfer(coin_out, vault.owner);
+
+    // Emite evento
+        event::emit(Withdrawn {
+            vault_id: object::id(vault),
+            amount,
+            owner: sender,
+            epoch: current_epoch,
+        });
 
     }
 
