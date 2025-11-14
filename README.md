@@ -43,42 +43,47 @@ unlock_epoch: Epoch when withdrawal is allowed
 
 
 ## Core Functions
-1. create_vault(unlock_epoch: u64)
-Creates a new vault and transfers ownership to the caller.
-movepublic entry fun create_vault(unlock_epoch: u64, ctx: &mut TxContext)
+
+// Creates a new vault and transfers ownership to the caller.
+create_vault(unlock_epoch: u64)
+public entry fun create_vault(unlock_epoch: u64, ctx: &mut TxContext)
 
 Example:
-movecreate_vault(1000, ctx); // Unlock at epoch 1000
+create_vault(1000, ctx); // Unlock at epoch 1000
+
 Create Vault Example
 Illustration: User creates vault locked until epoch 1000
 
-3. deposit(vault: &mut Vault, payment: Coin<SUI>)
-Deposits SUI into the vault. Only the owner can deposit.
-movepublic entry fun deposit(vault: &mut Vault, payment: Coin<SUI>, ctx: &mut TxContext)
+// Deposits SUI into the vault. Only the owner can deposit.
+deposit(vault: &mut Vault, payment: Coin<SUI>)
+
+public entry fun deposit(vault: &mut Vault, payment: Coin<SUI>, ctx: &mut TxContext)
 Example:
 movedeposit(my_vault, coin_of_500_SUI, ctx);
 Deposit Flow
 User deposits 500 SUI into their locked vault
 Emits: Deposited event
 
-4. withdraw(vault: &mut Vault)
-Withdraws all funds from the vault only if current epoch ≥ unlock_epoch.
-movepublic entry fun withdraw(vault: &mut Vault, ctx: &mut TxContext)
+// Withdraws all funds from the vault only if current epoch ≥ unlock_epoch.
+ withdraw(vault: &mut Vault)
+
+public entry fun withdraw(vault: &mut Vault, ctx: &mut TxContext)
 Requirements:
 
 Caller must be owner
 Current epoch must be ≥ unlock_epoch
 
 Example:
-move// Only works if tx_context::epoch(ctx) >= 1000
+// Only works if tx_context::epoch(ctx) >= 1000
 withdraw(my_vault, ctx);
 Withdrawal Success
 Funds released after epoch 1000
 Emits: Withdrawn event
 
-4. get_balance(vault: &Vault): u64
-Read function to check current balance.
-movepublic fun get_balance(vault: &Vault): u64
+// Read function to check current balance.
+ get_balance(vault: &Vault): u64
+
+public fun get_balance(vault: &Vault): u64
 Useful for frontends and explorers.
 
 Events
@@ -100,21 +105,23 @@ These events allow dApps to track savings activity in real time.
 
 ## Use Cases
 
-Use Case,How It Works
-New Year Savings,Lock funds until Jan 1st (epoch X)
-Wedding Fund,"Save for 6 months, unlock on wedding epoch"
-Habit Building,No-spend challenge with enforced lock
-Child Savings,Parent locks allowance until maturity
+| Use Case | How It Works |
+|--------|-----------|
+| **New Year Savings** | Lock funds until Jan 1st (epoch X) |
+| **Wedding Fund** | "Save for 6 months, unlock on wedding epoch" |
+| **Habit Building** | No-spend challenge with enforced lock |
+| **Child Savings** | Parent locks allowance until maturity |
 
 
 ## Security & Design Notes
 
-Feature,Why It Matters
-assert!(sender == vault.owner),Prevents unauthorized access
-assert!(current_epoch >= unlock_epoch),Enforces time lock
-"balance::split(..., amount)",Safely extracts full balance
-Coin<SUI> input,Standard Sui coin handling
-Events,Full transparency & indexing
+| Feature | Why It Matters |
+|--------|-----------|
+| **assert!(sender == vault.owner)** | Prevents unauthorized access |
+| **assert!(current_epoch >= unlock_epoch)** | Enforces time lock |
+| **"balance::split(..., amount)"** | Safely extracts full balance |
+| **Coin<SUI> input** | Standard Sui coin handling |
+| **Events** | Full transparency & indexing |
 
 
 How to Interact (Example Script)
