@@ -1,3 +1,7 @@
+⚠️ **Important Notice**
+This project is a final presentation for the Sui Bootcamp. It is not a commercial product. Savings Vault is deployed and functional, but it was developed for educational and demonstration purposes.
+
+
 # Savings Vault – A Time-Locked Digital Piggy Bank on Sui
 
 > **Smart Contract Module:** `savings_vault::vault`  
