@@ -31,82 +31,108 @@ It’s perfect for **commitment savings**, **goal-based saving**, or **enforced 
 | **Full Withdrawal** | Withdraws entire balance when unlocked |
 
 ## Smart Contract Structure
-### `Vault` Struct
-``move
+### Vault Struct
+````move
 public struct Vault has key, store {
     id: UID,
     owner: address,
     balance: Balance<SUI>,
     unlock_epoch: u64,
 }
+````
+- id: Unique object ID
+- owner: Who controls the vault
+- balance: Stored SUI tokens
+- unlock_epoch: Epoch when withdrawal is allowed
 
-id: Unique object ID
-owner: Who controls the vault
-balance: Stored SUI tokens
-unlock_epoch: Epoch when withdrawal is allowed
+---
 
 
 ## Core Functions
 
-// Creates a new vault and transfers ownership to the caller.
+Creates a new vault and transfers ownership to the caller.
+```move
 create_vault(unlock_epoch: u64)
 public entry fun create_vault(unlock_epoch: u64, ctx: &mut TxContext)
+```
 
-Example:
+### Example:
+```
 create_vault(1000, ctx); // Unlock at epoch 1000
+```
 
 Create Vault Example
 Illustration: User creates vault locked until epoch 1000
 
-// Deposits SUI into the vault. Only the owner can deposit.
+Deposits SUI into the vault. Only the owner can deposit.
+```move
 deposit(vault: &mut Vault, payment: Coin<SUI>)
 
 public entry fun deposit(vault: &mut Vault, payment: Coin<SUI>, ctx: &mut TxContext)
-Example:
-movedeposit(my_vault, coin_of_500_SUI, ctx);
-Deposit Flow
-User deposits 500 SUI into their locked vault
-Emits: Deposited event
+```
+---
+### Example:
+```move
+deposit(my_vault, coin_of_500_SUI, ctx);
+```
+- Deposit Flow
+- User deposits 500 SUI into their locked vault
+- Emits: Deposited event
 
-// Withdraws all funds from the vault only if current epoch ≥ unlock_epoch.
+--- 
+
+### Withdraws all funds from the vault only if current epoch ≥ unlock_epoch.
+```move
  withdraw(vault: &mut Vault)
-
 public entry fun withdraw(vault: &mut Vault, ctx: &mut TxContext)
+```
+
 Requirements:
+- Caller must be owner
+- Current epoch must be ≥ unlock_epoch
 
-Caller must be owner
-Current epoch must be ≥ unlock_epoch
-
-Example:
-// Only works if tx_context::epoch(ctx) >= 1000
+### Example:
+Only works if tx_context::epoch(ctx) >= 1000
+```
 withdraw(my_vault, ctx);
-Withdrawal Success
-Funds released after epoch 1000
-Emits: Withdrawn event
+```
+- Withdrawal Success
+- Funds released after epoch 1000
+- Emits: Withdrawn event
 
-// Read function to check current balance.
+--- 
+### Read function to check current balance.
+```move
  get_balance(vault: &Vault): u64
 
 public fun get_balance(vault: &Vault): u64
 Useful for frontends and explorers.
+```
+---
 
-Events
+### Events
 Deposited
-movepublic struct Deposited has copy, drop {
+```move
+public struct Deposited has copy, drop {
     vault_id: ID,
     amount: u64,
     owner: address,
     epoch: u64,
 }
-Withdrawn
-movepublic struct Withdrawn has copy, drop {
-    vault_id: ID,
-    amount: u64,
-    owner: address,
-    epoch: u64,
-}
-These events allow dApps to track savings activity in real time.
+````
+---
 
+Withdrawn
+````move
+public struct Withdrawn has copy, drop {
+    vault_id: ID,
+    amount: u64,
+    owner: address,
+    epoch: u64,
+}
+````
+These events allow dApps to track savings activity in real time.
+---
 ## Use Cases
 
 | Use Case | How It Works |
@@ -132,32 +158,44 @@ How to Interact (Example Script)
 
 use savings_vault::vault;
 
-// Step 1: Create vault (lock for 100 epochs)
+### Step 1: Create vault (lock for 100 epochs)
+````
 vault::create_vault(150, ctx);
+````
 
-// Step 2: Deposit 1000 SUI
+### Step 2: Deposit 1000 SUI
+````
 let coin = coin::mint(1000, ctx);
 vault::deposit(&mut my_vault, coin, ctx);
+````
 
-// Step 3: Later... after epoch 150
+### Step 3: Later... after epoch 150
+````
 vault::withdraw(&mut my_vault, ctx); // Succeeds!
+````
 
 Testing & Deployment
 
-Compile & Test Locally
+### Compile & Test Locally
+````
 sui move test
+````
 
-Publish to Devnet/Testnet
+### Publish to Devnet/Testnet
+````
 sui client publish --gas-budget 100000000
+````
 
 
 ##Project Files
+````
 savings_vault/
 ├── sources/
 │   └── vault.move
 ├── tests/
 │   └── vault_tests.move
 └── Move.toml
+````
 
 Contributing
 Feel free to:
